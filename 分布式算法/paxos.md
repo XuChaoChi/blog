@@ -1,8 +1,17 @@
-# 基于状态机复制的共识算法:Paxos    学习笔记
+---
+title: 分布式算法学习笔记--Paxos
+tags: 分布式
+date: 2019-04-14 17:55:25
+category: 分布式
+keywords: paxos,分布式
+---
+
+# 分布式算法学习笔记--Paxos    
 
 ## paxos简介
 自从Lamport在1998年发表Paxos算法后，对Paxos的各种改进工作就从未停止，其中动作最大的莫过于2005年发表的Fast Paxos。无论何种改进，其重点依然是在消息延迟与性能、吞吐量之间作出各种权衡。为了容易地从概念上区分二者，称前者Classic Paxos，改进后的后者为Fast Paxos。
 
+<!--more-->
 
 ## Basic-Paxos
 
