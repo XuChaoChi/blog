@@ -1,6 +1,7 @@
 # 基于状态机复制的共识算法:Paxos    学习笔记
 
 ## paxos简介
+自从Lamport在1998年发表Paxos算法后，对Paxos的各种改进工作就从未停止，其中动作最大的莫过于2005年发表的Fast Paxos。无论何种改进，其重点依然是在消息延迟与性能、吞吐量之间作出各种权衡。为了容易地从概念上区分二者，称前者Classic Paxos，改进后的后者为Fast Paxos。
 
 
 ## Basic-Paxos
@@ -87,6 +88,8 @@
     |<------------------------------------X--X  Response(W)
     |         |          |  |  |  |       |  |
 
+
+
 ### 有协调参与的冲突恢复。
 
     注意:协议没有指定如何处理被丢弃的客户端请求。
@@ -109,6 +112,8 @@
     |<---------------------------------X--X  Response(W)
     |  |      |        |  |  |  |      |  |
 
+问:协调者具体是怎么处理的
+
 ### 无协调者参与的相冲突恢复
 
     Client   Leader      Acceptor     Learner
@@ -130,6 +135,8 @@
     |<---------------------------------X--X  Response(W)
     |  |      |        |  |  |  |      |  |
 
+问:怎么确定要哪一请求
+
 ### 无协调者的冲突恢复、角色崩溃的Fast-Paxos
 
     Client         Servers
@@ -150,7 +157,11 @@
     |  |         X<>X<>X<>X  Accepted(N+1,I,W)
     |<-----------X--X--X--X  Response(W)
     |  |         |  |  |  |
+
 ## 学习资源
 
 [https://zh.wikipedia.org/zh-cn/Paxos%E7%AE%97%E6%B3%95](https://zh.wikipedia.org/zh-cn/Paxos%E7%AE%97%E6%B3%95)
 [https://www.youtube.com/watch?v=BhosKsE8up8](https://www.youtube.com/watch?v=BhosKsE8up8)
+[https://blog.csdn.net/chen77716/article/details/7297122](https://blog.csdn.net/chen77716/article/details/7297122)
+
+整理待完善
