@@ -70,5 +70,84 @@
 
 ### 3.1错误处理
 
+- 错误处理方式一:检测错误是否是nil,不是的话直接返回错误信息或者再完善下错误信息的内容
+
+        resp, err := http.Get(url)
+        if err != nil {
+            return nil, err
+            //完善错误信息的内容更便于查找错误
+            //return nil, fmt.Errorf("http Get err: %v", err)
+        }
+
+- 错误处理方式二:在错误发生是偶然性的,或者不可预知的情况,一是设置一个有时间间隔或者次数的重试机制
+
+- 错误处理方式三:直接退出程序(os.Exit(1)),不过只应该在main中,其他位置的应该向上传播
+
+- 错误处理方式四:通过log包输出错误日志
+
+- 错误处理方式五:直接忽略掉......
+
 
 ### 3.2文件结尾错误(EOF)
+
+io包保证任何由文件结束引起的读取失败都返回同一个io.EOF错误,错误的定义如下:
+
+    import io
+    import "error"
+    var EOF = errors.New("EOF")
+
+测试代码如下:
+
+    in := bufio.NewReader(os.Stdin)
+    for {
+        r, _, err := in.ReadRune()
+        if err == io.EOF {
+            break // finished reading
+        }
+        if err != nil {
+            return fmt.Errorf("read failed:%v", err)
+        }
+    }
+
+## 4.函数值
+
+- 在Go中函数和其他值一样拥有类型,可以被赋值和传递参数,以及返回,功能类似c++中的函数指针和仿函数
+- 函数值为nil的时候进行访问会抛出
+- 函数之间不能比较,并且不能作为map的key
+
+## 5.匿名函数
+
+匿名函数指的是没有定义名字符号的函数,可以作为变量,参数和返回值
+
+### 5.1闭包函数
+
+闭包是函数和其引用环境的组合体,例子:
+
+    package main
+
+    import (
+        "fmt"
+    )
+
+    func test(x int) func() {
+        fmt.Println(&x)
+        return func() {
+            fmt.Println(&x)
+        }
+    }
+    func main() {
+        a := test(10)
+        a()
+    }
+    //结果:
+    //0xc420012088
+    //0xc420012088
+
+可见x实际是上下文中的引用
+
+### 5.2 迭代变量
+
+正如闭包函数的特特性,容易造成迭代变量的问题(循环的时候闭包函数引用的同一个迭代值,最后处理的的是最后一次迭代的结果)
+
+
+
