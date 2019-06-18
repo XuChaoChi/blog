@@ -149,5 +149,110 @@ io包保证任何由文件结束引起的读取失败都返回同一个io.EOF错
 
 正如闭包函数的特特性,容易造成迭代变量的问题(循环的时候闭包函数引用的同一个迭代值,最后处理的的是最后一次迭代的结果)
 
+    package main
 
+    import (
+        "fmt"
+    )
 
+    func main() {
+        var funcArr [5]func()
+        funcSlice := funcArr[:]
+        var strArr = [...](string){"one", "two", "three"}
+        for _, v := range strArr {
+            funcSlice = append(funcSlice, func() {
+                fmt.Println(v)
+            })
+        }
+
+        for _, v := range funcSlice {
+            if v != nil {
+                v()
+            }
+        }
+    }
+
+    //结果
+    //three
+    //three
+    //three
+
+处理方式,只要在迭代变量赋值的时候使用一个零时变量就可以了
+
+    for _, v := range strArr {
+		newv := v //在这里用临时变量赋值
+		funcSlice = append(funcSlice, func() {
+			fmt.Println(newv)
+		})
+	}
+
+    ///结果
+    //one
+    //two
+    //three
+
+## 6.可变参数
+
+- 声明:在参数类前加上 ...
+
+- 例子如下:
+
+        package main
+        import (
+            "fmt"
+        )
+
+        func sum(vals ...int) int {
+            fmt.Printf("%T\n", vals)
+            total := 0
+            for _, val := range vals {
+                total += val
+            }
+            return total
+        }
+
+        func main() {
+            fmt.Println(sum(1, 2, 3))
+            fmt.Println(sum([]int{1, 2, 3}...))
+        }
+        //结果
+        //[]int
+        //6
+        //[]int
+        //6
+
+- 可见可变参函数的传递时被看做[]int的切片
+- 如果原始参数本来就是切片,秩序传递的时候在变量后面添加...
+- 虽然传递的时候被转换成切片但是本质和切片是不同的
+
+        func f(...int) {}
+        func g([]int) {}
+        fmt.Printf("%T\n", f) // "func(...int)"
+        fmt.Printf("%T\n", g) // "func([]int)"
+
+## 7.Deferred函数
+
+- defer 语句经常被用于处理成对的操作,如打开、关闭、连接、断开连接、加锁、释放锁
+- 在一个函数里重复defer以FILO规则,可以理解是按入栈出栈规则处理
+- 可以用defer来计算函数的耗时,如:
+
+        package main
+        import (
+            "fmt"
+            "time"
+        )
+        func test(msg string) func() {
+
+            start := time.Now()
+            fmt.Printf("enter %s\n", msg)
+            return func() {
+                fmt.Printf("exit %s,(%s)\n", msg, time.Since(start))
+            }
+        }
+
+        func main() {
+            defer test("test....")()
+            time.Sleep(2 * time.Second)
+        }
+        //enter test....
+        //exit test....,(2.000193984s)        
