@@ -145,3 +145,58 @@ Slice(切片)是Go中的变长数组，写作[]T,是元素的类型
         if age, ok := ages["bob"]; !ok { /* ... */ }
 
 ## 4.结构体
+
+- 定义
+
+        type Student struct{
+            ID int
+            Name string
+        }
+
+- 声明
+
+        var sdt Student
+
+- 访问使用
+
+        sdt.ID = 10
+
+- 通过指针使用成员
+
+        id = &sdt.ID
+        fmt.Println(*id)
+
+- 结构体S中不能再包含S类型,但是可以包含*S类型的指针
+
+## 5. JSON
+
+- go结构体slice转json,只有导出的结构体成员才会被编码所以成员需要大写
+
+        package main
+
+        import (
+        "fmt"
+        "encoding/json"
+        )
+
+        type JsonSt struct {
+        First string
+        Second []int
+        }
+
+        func main() {
+        var toJson = []JsonSt{
+                {First:"first1", Second:[]int{1, 2, 3}},
+                {First:"first2", Second:[]int{4, 5, 6, 7}},
+        }
+        //data, err := json.MarshalIndent(movies, "", "    ") //使用MarshalIndent返回缩进格式
+        data, err := json.Marshal(toJson)
+        if err != nil {
+                fmt.Printf("parse err %s", err)
+        }
+        fmt.Printf("%s\n", data)
+        }
+        //结果[{"First":"first1","Second":[1,2,3]},{"First":"first2","Second":[4,5,6,7]}]
+
+- json转go结构体slice
+
