@@ -1,3 +1,11 @@
+---
+title: GO基础学习笔记———函数
+date: 2019-06-19 10:55:57
+tags: go
+category: go
+keywords: go
+---
+
 # GO基础学习笔记———函数
 
 ## 1.函数声明
@@ -9,7 +17,7 @@
         }
 
 - 和c++,python之类的不同,形参不支持默认赋值
-
+<!--more-->
 - 传参格式
 
         func add(x, int, y int) int {return (x+y)}      //一般声明
@@ -256,3 +264,72 @@ io包保证任何由文件结束引起的读取失败都返回同一个io.EOF错
         }
         //enter test....
         //exit test....,(2.000193984s)        
+
+- 循环调用带来的问题
+
+        for _, filename := range filenames { 
+            f, err := os.Open(filename) 
+            if err != nil { return err }
+            defer f.Close() 
+        }
+
+    - 因为defer是在函数执行完的时候调用的所以只有当所有文件操作处理完的时候才释放文件描述符，造成资源浪费或者文件描述符使用完毕
+    - 解决方案是将defer相关的操作单独放到一个文件中
+
+            for _, filename := range filenames { 
+                if err := doFile(filename);
+                err != nil { return err } 
+            } 
+            func doFile(filename string) error { 
+                f, err := os.Open(filename) 
+                if err != nil { 
+                    return err 
+                } 
+                defer f.Close() 
+            }
+
+## 8.panic异常
+
+类似与c++的throw，区别在于panic会导致崩溃
+
+- panic也可以主动调用
+ 
+        package main
+        func main() {
+                panic("TEST")
+        }
+
+    结果
+
+        panic: TEST
+
+        goroutine 1 [running]:
+        main.main()
+                /root/test.go:4 +0x39
+        exit status 2
+
+- 遇到panic的时候会执行这个goroutine的defer
+
+        package main
+        import "fmt"
+        func main() {
+                defer fmt.Println("defer")
+                panic("TEST")
+        }
+
+    结果
+
+        defer
+        panic: TEST
+
+        goroutine 1 [running]:
+        main.main()
+                /root/test.go:4 +0x39
+        exit status 2
+
+## 9.recover 捕获异常
+
+recover 捕获panic,可以用来尝试恢复产生的异常，或者在异常发生的时候进行一些处理
+- 在未发生panic的时候调用recover会返回nil
+- 因为panic触发的时候立马调用defer，所以recover一般在defer中调用
+- 对于recover的处理需要区分下类型，毕竟不是所有的panic都需要恢复
