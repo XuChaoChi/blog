@@ -1,4 +1,12 @@
-GO基础学习笔记———复合数据类型
+---
+title: GO基础学习笔记———复合数据类型
+date: 2019-06-20 11:20:57
+tags: go
+category: go
+keywords: go
+---
+
+# GO基础学习笔记———复合数据类型
 
 ## 1.数组
 
@@ -11,6 +19,8 @@ GO基础学习笔记———复合数据类型
 
             var q[3]int = [3]int{1, 2, 3}
             var r[3]int = [3]int{1, 2}
+
+<!--more-->
 
     - go 也支持根据初始化的值来确定，不同于c++，go需要在括号里添加...
 
@@ -64,7 +74,16 @@ Slice(切片)是Go中的变长数组，写作[]T,是元素的类型
 
 ### 2.1 append函数
 
-内置的append用于slice追加元素
+- 内置的append用于slice追加元素
+
+        var runes []rune 
+        for _, r := range "Hello, 世界" 
+        { 
+            runes = append(runes, r) 
+        } 
+        fmt.Printf("%q\n", runes) // "['H' 'e' 'l' 'l' 'o' ',' ' ' '世' '界']"
+
+- append 大于容量的时候将重新分配，所以一般runes = append(runes, r)
 
 ### 2.2 slice内存技巧
 
@@ -168,35 +187,163 @@ Slice(切片)是Go中的变长数组，写作[]T,是元素的类型
 
 - 结构体S中不能再包含S类型,但是可以包含*S类型的指针
 
+### 4.1.结构体面值
+
+- 面值的2种方式
+  
+        type Point struct{ X, Y int } 
+        p := Point{1, 2}
+        p := Point{X:1, Y:2}
+
+- 如果是作为导出机构体，不仅结构体的名字需要大写，结构体成员的名字也需要大写
+- 一般结构体比较大的时候可以用指针传值
+ 
+        //第一种方式
+        pp := &Point{1, 2}
+        //第二种方式
+        pp := new(Point) 
+        *pp = Point{1, 2}
+
+### 4.2结构体的比较
+
+- 结构体的每个成员都可以比较的话可以直接使用 == 和 != 进行比较
+
+### 4.3结构体的嵌入和匿名成员
+
+    package main
+    import (
+        "fmt"
+    )
+
+    type Point struct{
+        X, Y int
+    }
+
+    type Circle struct{
+        Point
+        R int
+    }
+
+    func main(){
+        var a = Circle{Point{1,2} , 3}
+        fmt.Println(a.X)
+    }
+
+- 匿名结构体需要面值的时候需要指定结构体
+
+
 ## 5. JSON
 
-- go结构体slice转json,只有导出的结构体成员才会被编码所以成员需要大写
+- go结构体slice转json
 
         package main
 
         import (
-        "fmt"
-        "encoding/json"
+            "fmt"
+            "encoding/json"
         )
 
         type JsonSt struct {
-        First string
-        Second []int
+            First string
+            Second []int
+            Three int `json:"test,omitempty"`
         }
 
         func main() {
-        var toJson = []JsonSt{
-                {First:"first1", Second:[]int{1, 2, 3}},
+            var toJson = []JsonSt{
+                {First:"first1", Second:[]int{1, 2, 3}, Three:123},
                 {First:"first2", Second:[]int{4, 5, 6, 7}},
-        }
-        //data, err := json.MarshalIndent(movies, "", "    ") //使用MarshalIndent返回缩进格式
-        data, err := json.Marshal(toJson)
-        if err != nil {
+            }
+            data, err := json.Marshal(toJson)
+            if err != nil {
                 fmt.Printf("parse err %s", err)
+            }
+            fmt.Printf("%s\n", data)
         }
-        fmt.Printf("%s\n", data)
-        }
-        //结果[{"First":"first1","Second":[1,2,3]},{"First":"first2","Second":[4,5,6,7]}]
+        //结果[{"First":"first1","Second":[1,2,3],"test":123},{"First":"first2","Second":[4,5,6,7]}]
+
+    - 只有导出的结构体成员才会被编码所以成员需要大写，上面可以看到four没被导出
+    - Tag转换：可以把原始的字段名转换成Tag，同时Tag的 __omitempty__ 选项可以指定当值是0的时候不显示
+  
 
 - json转go结构体slice
 
+        package main
+
+        import (
+            "fmt"
+            "encoding/json"
+        )
+        func main() {
+            data :=[]byte( "[{\"1Title\":\"test\"},{\"title\":\"ok\"}]")
+            var titles  []struct {Title string}
+            if err := json.Unmarshal(data, &titles); err != nil {
+                fmt.Println(err)
+            }
+            fmt.Println(titles)
+        }
+        //结果：[{} {ok}]
+
+    - 对应的结构体同样需要大写
+    - 字段不对应为空或者0
+    - json的大小写没有影响
+    - Tag同样有效
+
+## 6.文本和html模板
+
+### 6.1 文本模板
+
+    package main
+
+    import (
+        "text/template"
+        "fmt"
+        "os"
+    )
+    type Test struct{
+        First int
+        Second string
+    }
+
+    type TestManager struct{
+        Total int
+        Tests []* Test
+    }
+
+    func main() {
+        arr := []*Test{
+            {First:1,Second:"one"},
+            {First:2,Second:"two"},
+        }
+        total := TestManager{2, arr}
+        const temp = `cnt:{{.Total}}
+        {{range .Tests}}-------------------------
+        First:  {{.First | add}}
+        Second: {{.Second}}
+        {{end}}
+        `
+        if rpt, err := template.New("report").Funcs(template.FuncMap{"add":add}).Parse(temp); err != nil {
+            fmt.Println(err)
+        }else{
+            rpt.Execute(os.Stdout, total)
+        }
+    }
+
+    func add(a int) int{
+        return a+1
+    }
+    //结果：
+    cnt:2
+    -------------------------
+    First:  2
+    Second: one
+    -------------------------
+    First:  3
+    Second: two
+
+  - range 和 end标签配对表示循环
+  - | 后面的函数需要通过模板注册
+
+### 6.2 HTML模版
+
+和文本类似用到了再说
