@@ -38,18 +38,33 @@ vscode version: 1.31.1
 
 ## 调试redis
 
-在菜单栏中找到File>Open Folder(ctrl+k ctrl+o)打开redis的src目录
+- 在菜单栏中找到File>Open Folder(ctrl+k ctrl+o)打开redis的src目录
 
-然后找到Debug>Start Debugging(f5),然后如图选择c++(GDB/LLDB)
+- 然后找到Debug>Start Debugging(f5),然后如图选择c++(GDB/LLDB)
 
 ![choose gdb](/blog/img/redis_gdb/1.png)
 
-选择之后在左边的.vscode目录下会出现launch.json文件
-
-将 *"program"* 修改为 *"${workspaceFolder}/redis-server"*
+- 选择之后在左边的.vscode目录下会出现launch.json文件,将 *"program"* 修改为 *"${workspaceFolder}/redis-server"*
 
 ![change json](/blog/img/redis_gdb/2.png)
 
-然后打开server.c,找到main函数,并且打上断点,然后继续按f5调试,接下来就能愉快的开始redis学习之旅了
+- 在.vscode目录下新建 tasks.json("CFLAGS=\"-g -O0\""参数是为了编译debug版本),并且修改launch.json *"preLaunchTask": "Build"* 使得tasks.json可以被加载
+
+        {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Build", 
+                "type": "shell", 
+                "command": "make",
+                "args": [
+                    "CFLAGS=\"-g -O0\""
+                ]
+            }
+        ]
+        }
+
+- 然后打开server.c,找到main函数,并且打上断点,然后继续按f5调试,就可以开始愉快的学习了
 
 ![start debugging](/blog/img/redis_gdb/3.png)
+
