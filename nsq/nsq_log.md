@@ -1,4 +1,14 @@
-# nsq日志模块学习
+---
+title: nsq源码阅读笔记--日志模块(lg)
+tags:
+  - nsq
+  - go
+category: 'nsq'
+keywords: 'nsq,go'
+date: 2019-09-12 01:35:05
+---
+
+# nsq源码阅读笔记--日志模块(lg)
 
 ### 代码地址
 
@@ -26,6 +36,8 @@ nsq中将标准库中的log模块又进行了简单的封装，目录在nsq项�
             ERROR = LogLevel(4)
             FATAL = LogLevel(5)
         )   
+
+<!--more-->
 
 - 日志等级相关的函数
 
@@ -78,7 +90,7 @@ nsq中将标准库中的log模块又进行了简单的封装，目录在nsq项�
 
 - 直接输出错误
 
-    用于产生严重错误时，可能正常的日志对象还没有被构建，将退出进程
+    用于产生严重错误时，可能正常的日志对象还没有被构建，调用后将退出进程
 
         //在没有日志对象的情况下输出严:重错误日志
         func LogFatal(prefix string, f string, args ...interface{}) {
@@ -97,3 +109,43 @@ nsq中将标准库中的log模块又进行了简单的封装，目录在nsq项�
 
 ### lg的使用
 
+    package main
+
+    import (
+        "log"
+        "os"
+
+        "github.com/nsqio/nsq/internal/lg"
+    )
+
+    const (
+        LOG_DEBUG = lg.DEBUG
+        LOG_INFO  = lg.INFO
+        LOG_WARN  = lg.WARN
+        LOG_ERROR = lg.ERROR
+        LOG_FATAL = lg.FATAL
+    )
+
+    type TestLogger lg.Logger
+
+    var testLog TestLogger
+
+    func logf(level lg.LogLevel, f string, args ...interface{}) {
+        lg.Logf(testLog, LOG_DEBUG, level, f, args...)
+    }
+
+    func main() {
+        //因为标准库的包实现了Output所以直接使用就可以了
+        testLog = log.New(os.Stderr, "[test]", log.Ldate|log.Ltime|log.Lmicroseconds)
+        logf(LOG_DEBUG, "test:%d", 1)
+        doAgain(logf)
+    }
+
+    func doAgain(lgFunc lg.AppLogFunc) {
+        lgFunc(LOG_INFO, "test:%d", 2)
+    }
+
+
+    //输出结果:
+    //[test]2019/09/12 01:28:08.827837 DEBUG: test:1
+    //[test]2019/09/12 01:28:08.828021 INFO: test:2
